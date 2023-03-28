@@ -13,20 +13,26 @@ import scala.collection.JavaConverters;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.AbstractFunction2;
 import scala.runtime.AbstractFunction3;
+import utils.Utils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class Exercise_1 {
 
+    public static Logger log = Logger.getLogger(Exercise_1.class.getName());
     private static class VProg extends AbstractFunction3<Long,Integer,Integer,Integer> implements Serializable {
         @Override
         public Integer apply(Long vertexID, Integer vertexValue, Integer message) {
+            log.info("[ VProg.apply ] vertexID: '" +  vertexID +  "' vertexValue: '" +  vertexValue + "' message: '" + message + "'" );
             if (message == Integer.MAX_VALUE) {             // superstep 0
+                log.info("[ VProg.apply ] First superstep -> vertexID: '" +  vertexID +  "'");
                 return vertexValue;
             } else {                                        // superstep > 0
+                log.info("[ VProg.apply ] vertexID: '" +  vertexID +  "' will send '" + Math.max(vertexValue, message) + "' value");
                 return Math.max(vertexValue,message);
             }
         }
@@ -40,9 +46,11 @@ public class Exercise_1 {
 
             if (sourceVertex._2 <= dstVertex._2) {   // source vertex value is smaller than dst vertex?
                 // do nothing
+                log.info("[ sendMsg.apply ] srcId: '" +  sourceVertex._1 +  " [" + sourceVertex._2 + "]' will send nothing to dstId: '" + dstVertex._1 + " [" + dstVertex._2 + "]'");
                 return JavaConverters.asScalaIteratorConverter(new ArrayList<Tuple2<Object,Integer>>().iterator()).asScala();
             } else {
                 // propagate source vertex value
+                log.info("[ sendMsg.apply ] srcId: '" +  sourceVertex._1 +  " [" + sourceVertex._2 + "]' will send '" + sourceVertex._2 + "' to dstId: '" + dstVertex._1 + " [" + dstVertex._2 + "]'");
                 return JavaConverters.asScalaIteratorConverter(Arrays.asList(new Tuple2<Object,Integer>(triplet.dstId(),sourceVertex._2)).iterator()).asScala();
             }
         }
@@ -51,6 +59,7 @@ public class Exercise_1 {
     private static class merge extends AbstractFunction2<Integer,Integer,Integer> implements Serializable {
         @Override
         public Integer apply(Integer o, Integer o2) {
+            log.info("[ merge.apply ] msg1: '" +  o + "' msg2: '" + o2 + "' -- do nothing");
             return Math.max(o,o2);
         }
     }
@@ -88,7 +97,7 @@ public class Exercise_1 {
                 scala.reflect.ClassTag$.MODULE$.apply(Integer.class))
         .vertices().toJavaRDD().first();
 
-        System.out.println(max._2 + " is the maximum value in the graph");
+        log.info(max._2 + " is the maximum value in the graph");
 	}
 	
 }
