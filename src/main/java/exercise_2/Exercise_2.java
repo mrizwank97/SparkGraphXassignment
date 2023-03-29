@@ -39,7 +39,21 @@ public class Exercise_2 {
     private static class sendMsg extends AbstractFunction1<EdgeTriplet<Integer,Integer>, Iterator<Tuple2<Object,Integer>>> implements Serializable {
         @Override
         public Iterator<Tuple2<Object, Integer>> apply(EdgeTriplet<Integer, Integer> triplet) {
-            return null;
+
+            Long srcId = triplet.srcId();
+            Long dstId = triplet.dstId();
+            Integer weight = triplet.attr();
+            Integer srcVertex = triplet.srcAttr();
+            Integer descVertex = triplet.dstAttr();
+
+            if (srcVertex == Integer.MAX_VALUE){
+                return JavaConverters.asScalaIteratorConverter(new ArrayList<Tuple2<Object,Integer>>().iterator()).asScala();
+            }
+
+            else{
+                Integer updated_value = srcVertex + weight;
+                return JavaConverters.asScalaIteratorConverter(Arrays.asList(new Tuple2<Object,Integer>(triplet.dstId(),updated_value)).iterator()).asScala();
+            }
         }
     }
 
