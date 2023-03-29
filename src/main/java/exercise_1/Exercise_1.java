@@ -4,8 +4,6 @@ import com.google.common.collect.Lists;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.graphx.*;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SQLContext;
 import org.apache.spark.storage.StorageLevel;
 import scala.Tuple2;
 import scala.collection.Iterator;
@@ -13,45 +11,47 @@ import scala.collection.JavaConverters;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.AbstractFunction2;
 import scala.runtime.AbstractFunction3;
-import utils.Utils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
-public class Exercise_1 {
+public class Exercise_1 { //This class represents the vertex program logic for a GraphX graph
 
-    public static Logger log = Logger.getLogger(Exercise_1.class.getName());
-    private static class VProg extends AbstractFunction3<Long,Integer,Integer,Integer> implements Serializable {
+
+    private static class VProg extends AbstractFunction3<Long, Integer, Integer, Integer> implements Serializable {
+        // If the message received is Integer.MAX_VALUE, it means that this is a superstep
         @Override
         public Integer apply(Long vertexID, Integer vertexValue, Integer message) {
-            log.info("[ VProg.apply ] vertexID: '" +  vertexID +  "' vertexValue: '" +  vertexValue + "' message: '" + message + "'" );
+            System.out.println("Vertex " + vertexID + " received message " + message);
             if (message == Integer.MAX_VALUE) {             // superstep 0
-                log.info("[ VProg.apply ] First superstep -> vertexID: '" +  vertexID +  "'");
+                System.out.println("Superstep 0 - Initializing vertex " + vertexID + " with value " + vertexValue);
                 return vertexValue;
             } else {                                        // superstep > 0
-                log.info("[ VProg.apply ] vertexID: '" +  vertexID +  "' will send '" + Math.max(vertexValue, message) + "' value");
-                return Math.max(vertexValue,message);
+                System.out.println("Next Superstep - Updating vertex " + vertexID + " with value " + message);
+                return Math.max(vertexValue, message);
             }
         }
     }
 
-    private static class sendMsg extends AbstractFunction1<EdgeTriplet<Integer,Integer>, Iterator<Tuple2<Object,Integer>>> implements Serializable {
+
+    // This class represents the message sending logic for a GraphX graph
+    private static class sendMsg extends AbstractFunction1<EdgeTriplet<Integer, Integer>, Iterator<Tuple2<Object, Integer>>> implements Serializable {
         @Override
         public Iterator<Tuple2<Object, Integer>> apply(EdgeTriplet<Integer, Integer> triplet) {
-            Tuple2<Object,Integer> sourceVertex = triplet.toTuple()._1();
-            Tuple2<Object,Integer> dstVertex = triplet.toTuple()._2();
+            Tuple2<Object, Integer> sourceVertex = triplet.toTuple()._1();
+            Tuple2<Object, Integer> dstVertex = triplet.toTuple()._2();
 
+            // If the source vertex value is smaller than or equal to the destination vertex value, do not send any message
             if (sourceVertex._2 <= dstVertex._2) {   // source vertex value is smaller than dst vertex?
                 // do nothing
-                log.info("[ sendMsg.apply ] srcId: '" +  sourceVertex._1 +  " [" + sourceVertex._2 + "]' will send nothing to dstId: '" + dstVertex._1 + " [" + dstVertex._2 + "]'");
-                return JavaConverters.asScalaIteratorConverter(new ArrayList<Tuple2<Object,Integer>>().iterator()).asScala();
+                System.out.println("Source vertex " + sourceVertex._1() + " did not send any message to destination vertex " + dstVertex._1());
+                return JavaConverters.asScalaIteratorConverter(new ArrayList<Tuple2<Object, Integer>>().iterator()).asScala();
             } else {
                 // propagate source vertex value
-                log.info("[ sendMsg.apply ] srcId: '" +  sourceVertex._1 +  " [" + sourceVertex._2 + "]' will send '" + sourceVertex._2 + "' to dstId: '" + dstVertex._1 + " [" + dstVertex._2 + "]'");
-                return JavaConverters.asScalaIteratorConverter(Arrays.asList(new Tuple2<Object,Integer>(triplet.dstId(),sourceVertex._2)).iterator()).asScala();
+                System.out.println("Source vertex " + sourceVertex._1() + " sent message " + sourceVertex._2 + " to destination vertex " + triplet.dstId());
+                return JavaConverters.asScalaIteratorConverter(Arrays.asList(new Tuple2<Object, Integer>(triplet.dstId(), sourceVertex._2)).iterator()).asScala();
             }
         }
     }
@@ -59,24 +59,23 @@ public class Exercise_1 {
     private static class merge extends AbstractFunction2<Integer,Integer,Integer> implements Serializable {
         @Override
         public Integer apply(Integer o, Integer o2) {
-            log.info("[ merge.apply ] msg1: '" +  o + "' msg2: '" + o2 + "' -- do nothing");
-            return Math.max(o,o2);
+            return null;
         }
     }
 
     public static void maxValue(JavaSparkContext ctx) {
         List<Tuple2<Object,Integer>> vertices = Lists.newArrayList(
-            new Tuple2<Object,Integer>(1l,9),
-            new Tuple2<Object,Integer>(2l,1),
-            new Tuple2<Object,Integer>(3l,6),
-            new Tuple2<Object,Integer>(4l,8)
+                new Tuple2<Object,Integer>(1l,9),
+                new Tuple2<Object,Integer>(2l,1),
+                new Tuple2<Object,Integer>(3l,6),
+                new Tuple2<Object,Integer>(4l,8)
         );
         List<Edge<Integer>> edges = Lists.newArrayList(
-            new Edge<Integer>(1l,2l, 1),
-            new Edge<Integer>(2l,3l, 1),
-            new Edge<Integer>(2l,4l, 1),
-            new Edge<Integer>(3l,4l, 1),
-            new Edge<Integer>(3l,1l, 1)
+                new Edge<Integer>(1l,2l, 1),
+                new Edge<Integer>(2l,3l, 1),
+                new Edge<Integer>(2l,4l, 1),
+                new Edge<Integer>(3l,4l, 1),
+                new Edge<Integer>(3l,1l, 1)
         );
 
         JavaRDD<Tuple2<Object,Integer>> verticesRDD = ctx.parallelize(vertices);
@@ -84,20 +83,17 @@ public class Exercise_1 {
 
         Graph<Integer,Integer> G = Graph.apply(verticesRDD.rdd(),edgesRDD.rdd(),1, StorageLevel.MEMORY_ONLY(), StorageLevel.MEMORY_ONLY(),
                 scala.reflect.ClassTag$.MODULE$.apply(Integer.class),scala.reflect.ClassTag$.MODULE$.apply(Integer.class));
-
         GraphOps ops = new GraphOps(G, scala.reflect.ClassTag$.MODULE$.apply(Integer.class),scala.reflect.ClassTag$.MODULE$.apply(Integer.class));
 
         Tuple2<Long,Integer> max = (Tuple2<Long,Integer>)ops.pregel(
-                Integer.MAX_VALUE,
-                Integer.MAX_VALUE,      // Run until convergence
-                EdgeDirection.Out(),
-                new VProg(),
-                new sendMsg(),
-                new merge(),
-                scala.reflect.ClassTag$.MODULE$.apply(Integer.class))
-        .vertices().toJavaRDD().first();
-
-        log.info(max._2 + " is the maximum value in the graph");
-	}
-	
+                        Integer.MAX_VALUE,
+                        Integer.MAX_VALUE,      // Run until convergence
+                        EdgeDirection.Out(),
+                        new VProg(),
+                        new sendMsg(),
+                        new merge(),
+                        scala.reflect.ClassTag$.MODULE$.apply(Integer.class))
+                .vertices().toJavaRDD().first();
+        System.out.println(max._2 + " is the maximum value in the graph");
+    }
 }
