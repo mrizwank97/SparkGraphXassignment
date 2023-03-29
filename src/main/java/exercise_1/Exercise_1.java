@@ -20,10 +20,11 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class Exercise_1 {
+public class Exercise_1 { //This class represents the vertex program logic for a GraphX graph
 
 
     private static class VProg extends AbstractFunction3<Long, Integer, Integer, Integer> implements Serializable {
+        // If the message received is Integer.MAX_VALUE, it means that this is a superstep
         @Override
         public Integer apply(Long vertexID, Integer vertexValue, Integer message) {
             System.out.println("Vertex " + vertexID + " received message " + message);
@@ -37,14 +38,14 @@ public class Exercise_1 {
         }
     }
 
-
-
+    // This class represents the message sending logic for a GraphX graph
     private static class sendMsg extends AbstractFunction1<EdgeTriplet<Integer, Integer>, Iterator<Tuple2<Object, Integer>>> implements Serializable {
         @Override
         public Iterator<Tuple2<Object, Integer>> apply(EdgeTriplet<Integer, Integer> triplet) {
             Tuple2<Object, Integer> sourceVertex = triplet.toTuple()._1();
             Tuple2<Object, Integer> dstVertex = triplet.toTuple()._2();
 
+            // If the source vertex value is smaller than or equal to the destination vertex value, do not send any message
             if (sourceVertex._2 <= dstVertex._2) {   // source vertex value is smaller than dst vertex?
                 // do nothing
                 System.out.println("Source vertex " + sourceVertex._1() + " did not send any message to destination vertex " + dstVertex._1());
@@ -62,6 +63,7 @@ public class Exercise_1 {
         public Integer apply(Integer o, Integer o2) {
             return null;
         }
+        //TODO: Implement merge logic to combine two values and return the result
     }
 
     public static void maxValue(JavaSparkContext ctx) {
