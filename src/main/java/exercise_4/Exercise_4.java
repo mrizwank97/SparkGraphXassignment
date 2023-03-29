@@ -41,13 +41,6 @@ public class Exercise_4 {
 
 		GraphFrame gf = GraphFrame.apply(vertices, edges);
 		GraphFrame results = gf.pageRank().resetProbability(0.9).maxIter(100).run();
-
-//		System.out.println(gf.vertices().count());
-//		System.out.println(gf.edges().count());
-
-//		results.vertices().select("id","title", "pagerank").show();
-//		results.edges().select("src", "dst", "weight").show();
-
 		results.vertices().orderBy(desc("pagerank")).limit(10).select("id","title","pagerank").show();
 
 	}
