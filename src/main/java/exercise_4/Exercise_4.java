@@ -11,10 +11,11 @@ import org.apache.spark.sql.types.MetadataBuilder;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.graphframes.GraphFrame;
+
 import static org.apache.spark.sql.functions.desc;
 
 public class Exercise_4 {
-	
+
 	public static void wikipedia(JavaSparkContext ctx, SQLContext sqlCtx) {
 
 		//Reading vertex file and initializing JavaRDD row by using lambda function
@@ -45,10 +46,21 @@ public class Exercise_4 {
 		Dataset<Row> edges = sqlCtx.createDataFrame(edgesRowRDD, edgesSchema);
 
 		GraphFrame gf = GraphFrame.apply(vertices, edges);
-		//calculating pageRank by setting damping factor to 0.7 and max no of iterations to 5
-		GraphFrame results = gf.pageRank().resetProbability(0.5).maxIter(10).run();
-		//sorting and limiting the result and then displaying the results
-		results.vertices().orderBy(desc("pagerank")).limit(10).select("id","title","pagerank").show();
+
+		//calculating pageRank by iterating over damping factor and maxIter hyper parameters of pageRank algorithM
+		//damping factor is iterated from 0.95 to 0 with step size of 0.05
+		//maxIter parameter is iterated from 5 to 50 with step size of 5
+		//for each value of maxIter the damping factor is varied from 0.95 to zero
+		for (int i = 1; i <= 20; i++) {
+			for (int j = 5; j <= 50; j+=5) {
+
+				Long start = System.currentTimeMillis();
+				GraphFrame results = gf.pageRank().resetProbability(1 - (i * 0.05)).maxIter(j).run();
+				Long end = System.currentTimeMillis();
+
+				System.out.println("resetProbability: '" + (1 - (i * 0.05)) + "' maxIter: '" + j + "' time: '" + (end - start) + "' msec\n");
+				results.vertices().orderBy(desc("pagerank")).limit(10).select("id", "title", "pagerank").show();
+			}
+		}
 	}
-	
 }
