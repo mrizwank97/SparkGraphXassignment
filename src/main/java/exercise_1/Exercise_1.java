@@ -32,11 +32,13 @@ public class Exercise_1 { //This class represents the vertex program logic for a
                 System.out.println("Superstep 0 - Initializing vertex " + vertexID + " with value " + vertexValue);
                 return vertexValue;
             } else {                                        // superstep > 0
-                System.out.println("Superstep " + message + " - Updating vertex " + vertexID + " with value " + message);
+                //System.out.println("Superstep " + message + " - Updating vertex " + vertexID + " with value " + message);
+                System.out.println("Next Superstep - Updating vertex " + vertexID + " with value " + message);
                 return Math.max(vertexValue, message);
             }
         }
     }
+
 
     // This class represents the message sending logic for a GraphX graph
     private static class sendMsg extends AbstractFunction1<EdgeTriplet<Integer, Integer>, Iterator<Tuple2<Object, Integer>>> implements Serializable {
